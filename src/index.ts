@@ -65,7 +65,7 @@ async function requestPools(web3: Web3) {
     return true
   }
 
-  const gasPriceFactor = 90
+  const gasPriceFactor = 80
   var gasPrice = String(Number(realGasPrice) * gasPriceFactor / 100) // when Fantom is not congested 90% of the reported gas price is usually enough to have a fast enough and profitable tx
   console.log('real gas price ' + fromWei(realGasPrice, 'gwei'))
   console.log('gas price ' + fromWei(gasPrice, 'gwei'))
