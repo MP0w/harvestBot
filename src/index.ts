@@ -119,8 +119,8 @@ async function request(web3: Web3, contractAddr: string, gasPrice: string): Prom
   }
 
   const estimatedGasCount = BigInt(await contract.methods.harvest().estimateGas())
-  const divider = BigInt(20)
-  const gasCount = (estimatedGasCount / divider) + estimatedGasCount // add 20% more as the estimation is not really precise
+  const gasCount = (estimatedGasCount / BigInt(10)) + estimatedGasCount // add 10% more as the estimation is not really precise
+  const safeGasCount = (estimatedGasCount / BigInt(25)) + estimatedGasCount // use 25% more to execute, eventually not completely profitable but more profitable than a failing tx
   const estimatedGas = BigInt(gasCount) * BigInt(gasPrice)
 
   if (Number(estimatedGas) > 2000000000000000000) {
@@ -129,17 +129,20 @@ async function request(web3: Web3, contractAddr: string, gasPrice: string): Prom
   }
 
   const profit = BigInt(reward) - BigInt(estimatedGas)
-  const minProfit = 0; // as the gas is overestimated we can expect profit anyway
+  const minProfit = 100000000000000000;
+  console.log("\n\nProfit " + fromWei(String(profit), 'ether') + "\n\n")
+  console.log("\n\Reward " + fromWei(String(reward), 'ether') + "\n\n")
+
   if (profit >= minProfit) {
-    console.log("\n\nProfitable " + fromWei(String(profit), 'ether') + "\n\n")
     console.log('gas count ' + gasCount)
     console.log('cost ' + fromWei(String(estimatedGas), 'ether'))
 
     try {
-      await contract.methods.harvest().send({ from: address, gas: String(gasCount), gasPrice: String(gasPrice) })
+      await sleep(5)
+      await contract.methods.harvest().send({ from: address, gas: String(safeGasCount), gasPrice: String(gasPrice) })
     } catch (error) {
       console.log(error)
-      await sleep(20)
+      await sleep(15)
     }
   }
 
