@@ -42,7 +42,7 @@ async function runLoop(web3: Web3) {
     await requestPools(web3)
   } catch (error) {
     console.log(error);
-    await sleep(30)
+    await sleep(15)
     runLoop(web3)
   }
 }
@@ -115,10 +115,19 @@ async function request(web3: Web3, contractAddr: string, gasPrice: string): Prom
 
   if (Number(fromWei(reward, 'ether')) > 500) {
     // some pools have wrong reward, mostly creditum ones
+    console.log('Skip broken reward')
     return true
   }
 
-  const estimatedGasCount = BigInt(await contract.methods.harvest().estimateGas())
+  let estimatedGasCount = BigInt(0)
+
+  try {
+    estimatedGasCount = BigInt(await contract.methods.harvest().estimateGas())
+  } catch (error) {
+    console.log(error)
+    return true
+  }
+
   const gasCount = (estimatedGasCount / BigInt(10)) + estimatedGasCount // add 10% more as the estimation is not really precise
   const safeGasCount = (estimatedGasCount / BigInt(25)) + estimatedGasCount // use 25% more to execute, eventually not completely profitable but more profitable than a failing tx
   const estimatedGas = BigInt(gasCount) * BigInt(gasPrice)
